@@ -1,4 +1,9 @@
-<img src="http://www.sadabc.com/storage/myimages/1.png" alt="testing" width="280"/>
+<figure align="center">
+  <img
+  src=".\astro_logo.png"
+  alt="Astro Devices by Saferoad" width="30%">
+</figure>
+<!-- <img src=".\test.png" alt="testing" width="280"/> -->
 
 # Create your project
 Use your termainal to create new project, <BR>
