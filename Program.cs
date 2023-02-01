@@ -6,7 +6,7 @@ namespace AstroTestProj
         static void Main(string[] args)
         {
             RunParser();
-            SimpleTcpListener.RunListener();
+            SimpleTcpListener.RunListener(6013).GetAwaiter().GetResult();
         }
 
         static void RunParser()
