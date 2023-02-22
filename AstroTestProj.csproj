@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Saferoad.Protocol.Astro" Version="1.0.6.2" />
+    <PackageReference Include="Saferoad.Protocol.Astro" Version="1.0.7.1" />
   </ItemGroup>
 
 </Project>

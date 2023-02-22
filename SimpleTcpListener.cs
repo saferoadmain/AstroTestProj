@@ -4,16 +4,16 @@ using Saferoad.Protocol.Astro;
 
 namespace AstroTestProj
 {
-    static class SimpleTcpListener
+    internal static class SimpleTcpListener
     {
-        public static async Task RunListener(int port = 500)
+        internal static async Task RunListener(int port = 500)
         {
             try
             {
                 IPAddress ipAddress = IPAddress.Parse("0.0.0.0");
                 while (true)
                 {
-                    Console.WriteLine($"Starting TCP listener: IP({ipAddress}), Port:({port})...");
+                    Console.WriteLine($"{DateTime.UtcNow}: Starting TCP listener IP({ipAddress}), Port:({port})...");
                     TcpListener tcpListener = new TcpListener(ipAddress, port);
 
                     tcpListener.Start();
@@ -23,29 +23,29 @@ namespace AstroTestProj
                         {
                             using (var client = await tcpListener.AcceptTcpClientAsync())
                             {
-                                Console.WriteLine("Connection accepted.");
+                                Console.WriteLine($"{DateTime.UtcNow}: Connection accepted.");
                                 await RunReader(client);
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("RunListener Error: " + ex.Message);
+                        Console.WriteLine($"{DateTime.UtcNow}: RunListener Error: " + ex.Message);
                         Console.ReadLine();
                     }
-                    Console.WriteLine("Stopping TCP listener...");
+                    Console.WriteLine($"{DateTime.UtcNow}: Stopping TCP listener...");
                     tcpListener.Stop();
-                    Console.WriteLine("Stopped TCP Stopped");
+                    Console.WriteLine($"{DateTime.UtcNow}: Stopped TCP Stopped");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine("RunListener Error: " + ex.Message);
+                Console.WriteLine($"{DateTime.UtcNow}: RunListener Error: " + ex.Message);
                 Console.ReadLine();
             }
         }
 
-        public static async Task RunReader(TcpClient client)
+        internal static async Task RunReader(TcpClient client)
         {
             using (var stream = client.GetStream())
             {
@@ -54,24 +54,24 @@ namespace AstroTestProj
                     var fullPacket = new List<byte>();
 
                     var bytes = new byte[4096];
-                    while (stream.Read(bytes, 0, bytes.Length) != 0)
+                    while (await stream.ReadAsync(bytes, 0, bytes.Length) != 0)
                     {
                         byte[] RawPacketBytes = TrimEnd(bytes);
-                        (MessageIDs MsgId, string IMEI, byte[] Response) = Astro500.ParseHeader(RawPacketBytes);
-                        Console.WriteLine($"Test Header: MsgId: {MsgId}, IMEI: {IMEI}");
+                        var hd = Astro500.GetHeader(RawPacketBytes);
+                        Console.WriteLine($"{DateTime.UtcNow}: (Header) MsgId: {hd.MsgId}, IMEI: {hd.IMEI}, Count: {hd.Count}");
 
-                        (MsgId, IMEI, Response, List<Astro500Location> Locations) = Astro500.ParseBody(RawPacketBytes);
-                        Console.WriteLine($"Body: MsgId: {MsgId}, IMEI: {IMEI}, LocationCounts: {Locations.Count}");
-                        foreach (var loc in Locations)
+                        var pkt = Astro500.GetPacket(RawPacketBytes);
+                        Console.WriteLine($"{DateTime.UtcNow}: (Body) MsgId: {pkt.MsgId}, IMEI: {pkt.IMEI}, Count: {pkt.Count}, LocationCounts: {pkt.Locations.Count}");
+                        foreach (var loc in pkt.Locations)
                         {
-                            Console.WriteLine($"Body - Loc: {loc.RecordDateTime}, Speed:{loc.Speed}, Lat:{loc.Latitude}, Long:{loc.Longitude}");
+                            Console.WriteLine($"{DateTime.UtcNow}: (Body) - Loc: {loc.RecordDateTime}, Speed:{loc.Speed}, Lat:{loc.Latitude}, Long:{loc.Longitude}");
                         }
-                        stream.Write(Response, 0, Response.Length);
+                        if (client?.Connected ?? false) stream.Write(hd.Response, 0, hd.Response.Length);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("GetStream Error: " + ex.Message);
+                    Console.WriteLine($"{DateTime.UtcNow}: GetStream Error: " + ex.Message);
                 }
             }
 
