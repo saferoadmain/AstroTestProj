@@ -58,15 +58,14 @@ namespace AstroTestProj
                     {
                         byte[] RawPacketBytes = TrimEnd(bytes);
                         var hd = Astro500.GetHeader(RawPacketBytes);
-                        Console.WriteLine($"{DateTime.UtcNow}: (Header) MsgId: {hd.MsgId}, IMEI: {hd.IMEI}, Count: {hd.Count}");
+                        Console.WriteLine($"{DateTime.UtcNow}: (Header) IMEI: {hd.IMEI}, Count: {hd.Headers.Count}, MsgIds: {String.Join(',', hd.Headers.Select(x => x.MsgId))}");
 
                         var pkt = Astro500.GetPacket(RawPacketBytes);
-                        Console.WriteLine($"{DateTime.UtcNow}: (Body) MsgId: {pkt.MsgId}, IMEI: {pkt.IMEI}, Count: {pkt.Count}, LocationCounts: {pkt.Locations.Count}");
+                        Console.WriteLine($"{DateTime.UtcNow}: (Body) IMEI: {pkt.IMEI}, Count: {pkt.Headers.Count}, LocationCounts: {pkt.Locations.Count}, MsgIds: {String.Join(',', pkt.Headers.Select(x => x.MsgId))}");
                         foreach (var loc in pkt.Locations)
-                        {
                             Console.WriteLine($"{DateTime.UtcNow}: (Body) - Loc: {loc.RecordDateTime}, Speed:{loc.Speed}, Lat:{loc.Latitude}, Long:{loc.Longitude}");
-                        }
-                        if (client?.Connected ?? false) stream.Write(hd.Response, 0, hd.Response.Length);
+                        foreach(var header in pkt.Headers) 
+                            if (client?.Connected ?? false) stream.Write(header.Response, 0, header.Response.Length);
                     }
                 }
                 catch (Exception ex)
